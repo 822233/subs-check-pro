@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version (for example v3.6.5)
+        description: 发布版本号（例如 v3.6.6）
         required: true
         default: v3.6.5
         type: string
@@ -37,24 +37,24 @@ jobs:
           VERSION: ${{ inputs.version || 'v3.6.5' }}
         run: |
           set -euo pipefail
-          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Invalid stable version: $VERSION"
+          if [[ ! "$VERSION" =~ ^v[0-9]+\\.[0-9]+\\.[0-9]+$ ]]; then
+            echo "版本号格式无效：$VERSION"
             exit 1
           fi
           if ! fork_refs="$(git ls-remote https://github.com/${GITHUB_REPOSITORY}.git "refs/tags/$VERSION")"; then
-            echo "Unable to verify tags in the fork; refusing to publish."
+            echo "无法验证 Fork 仓库标签，停止发布。"
             exit 1
           fi
           if [[ -n "$fork_refs" ]]; then
-            echo "Tag $VERSION already exists in this fork."
+            echo "标签 $VERSION 已存在于 Fork 仓库。"
             exit 1
           fi
           if ! upstream_refs="$(git ls-remote https://github.com/sinspired/subs-check-pro.git "refs/tags/$VERSION")"; then
-            echo "Unable to verify upstream tags; refusing to publish."
+            echo "无法验证上游标签，停止发布。"
             exit 1
           fi
           if [[ -n "$upstream_refs" ]]; then
-            echo "Tag $VERSION already exists upstream. Choose a new version to avoid ambiguity."
+            echo "标签 $VERSION 已存在于上游仓库，请选择新版本。"
             exit 1
           fi
           echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
@@ -99,18 +99,18 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          docker run --rm \
-            -v "$GITHUB_WORKSPACE:/work" -w /work \
-            -e VERSION="$VERSION" -e COMMIT="$COMMIT" \
-            --entrypoint bash \
-            goreleaser/goreleaser-cross:latest \
+          docker run --rm \\
+            -v "$GITHUB_WORKSPACE:/work" -w /work \\
+            -e VERSION="$VERSION" -e COMMIT="$COMMIT" \\
+            --entrypoint bash \\
+            goreleaser/goreleaser-cross:latest \\
             -lc '
               set -euo pipefail
               git config --global --add safe.directory /work
               go mod download
-              CGO_ENABLED=1 CC=x86_64-linux-gnu-gcc CXX=x86_64-linux-gnu-g++ \
-                go build -trimpath -tags=netgo,osusergo \
-                -ldflags="-s -w -extldflags \"-static -Wl,-z,stack-size=8388608\" -X main.Version=${VERSION#v} -X main.CurrentCommit=${COMMIT:0:7}" \
+              CGO_ENABLED=1 CC=x86_64-linux-gnu-gcc CXX=x86_64-linux-gnu-g++ \\
+                go build -trimpath -tags=netgo,osusergo \\
+                -ldflags="-s -w -extldflags \\"-static -Wl,-z,stack-size=8388608\\" -X main.Version=${VERSION#v} -X main.CurrentCommit=${COMMIT:0:7}" \\
                 -o dist/subs-check-pro .
             '
 
@@ -121,18 +121,18 @@ jobs:
           set -euo pipefail
           test -s dist/subs-check-pro
           file_output="$(file dist/subs-check-pro)"
-          printf '%s\n' "$file_output"
+          printf '%s\\n' "$file_output"
           grep -E 'ELF 64-bit.*x86-64' <<<"$file_output"
           grep -Fq 'statically linked' <<<"$file_output"
           ldd_output="$(ldd dist/subs-check-pro 2>&1 || true)"
           if ! grep -Fq 'not a dynamic executable' <<<"$ldd_output"; then
-            echo "Binary is not confirmed as statically linked:"
-            printf '%s\n' "$ldd_output"
+            echo "未能确认程序为静态链接："
+            printf '%s\\n' "$ldd_output"
             exit 1
           fi
           strings dist/subs-check-pro | grep -Fq 'sub-store-public-url'
           strings dist/subs-check-pro | grep -F "${VERSION#v}" >/dev/null
-          stat -c 'Uncompressed size: %s bytes' dist/subs-check-pro
+          stat -c '未压缩文件大小：%s 字节' dist/subs-check-pro
 
       - name: Install pinned UPX
         run: |
@@ -153,19 +153,19 @@ jobs:
           upx --best dist/subs-check-pro
           upx -t dist/subs-check-pro
           packed="$(stat -c %s dist/subs-check-pro)"
-          echo "UPX size: ${before} -> ${packed} bytes"
+          echo "UPX 压缩大小：${before} -> ${packed} 字节"
           test "$packed" -lt "$before"
           file dist/subs-check-pro | tee /tmp/packed-file.txt
           grep -E 'ELF 64-bit.*x86-64' /tmp/packed-file.txt
           upx -d -o /tmp/subs-check-pro.unpacked dist/subs-check-pro
           unpacked_info="$(file /tmp/subs-check-pro.unpacked)"
-          printf '%s\n' "$unpacked_info"
+          printf '%s\\n' "$unpacked_info"
           grep -Fq 'statically linked' <<<"$unpacked_info"
           strings /tmp/subs-check-pro.unpacked | grep -Fq 'sub-store-public-url'
           strings /tmp/subs-check-pro.unpacked | grep -F "${VERSION#v}" >/dev/null
           rm -f /tmp/subs-check-pro.unpacked
           (cd dist && sha256sum subs-check-pro > SHA256SUMS)
-          printf 'Version: %s\nCommit: %s\nUPX: 5.3.0 (--best)\n' "$VERSION" "${GITHUB_SHA}" > dist/BUILD-INFO.txt
+          printf '版本：%s\\n提交：%s\\nUPX：5.3.0 (--best)\\n' "$VERSION" "${GITHUB_SHA}" > dist/BUILD-INFO.txt
 
       - name: Upload build artifact for inspection
         uses: actions/upload-artifact@v4
@@ -183,14 +183,28 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           target_commitish: ${{ github.sha }}
-          name: Subs-Check PRO ${{ steps.version.outputs.tag }} (configurable Sub-Store URL)
+          name: Subs-Check PRO ${{ steps.version.outputs.tag }}（Sub-Store 公网地址可配置版）
           body: |
-            This release is built from the exact triggering commit on the selected branch.
+            ## 版本说明
 
-            - Uses the pinned WebUI fork with a runtime-configurable Sub-Store public URL (`sub-store-public-url` or `SUB_STORE_PUBLIC_URL`).
-            - Includes the Linux amd64 static binary only.
-            - Existing server configuration, API key, random Sub-Store path and output data are not changed by this release.
-            - SHA-256 checksum is provided in `SHA256SUMS`.
+            本版本基于本次触发构建的准确代码提交生成。
+
+            ### 更新内容
+
+            - **Sub-Store 公网地址支持配置**：可通过配置文件中的 `sub-store-public-url` 或环境变量 `SUB_STORE_PUBLIC_URL` 设置公网访问地址。
+            - **统一入口**：首页入口与分享链接使用同一配置，避免地址不一致。
+            - **兼容性处理**：未配置公网地址时支持自动探测；Wails 桌面端优先使用本地地址。
+            - **程序平台**：提供 Linux amd64 静态编译版本。
+
+            ### 配置与数据说明
+
+            - 更新程序不会主动修改服务器现有配置。
+            - 保留原有 API Key、随机 Sub-Store 路径及输出数据。
+            - SHA-256 文件校验值见附件 `SHA256SUMS`。
+
+            ### 下载说明
+
+            下载 Linux amd64 对应程序后，建议先核对 SHA-256 校验值，再替换服务器上的旧版本。
           draft: false
           prerelease: false
           files: |
