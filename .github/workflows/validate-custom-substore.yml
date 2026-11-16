@@ -1,0 +1,61 @@
+name: Validate custom Sub-Store endpoint
+
+on:
+  push:
+    branches:
+      - main
+      - fix/public-substore-endpoint
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Resolve the pinned WebUI fork
+        run: |
+          go mod download github.com/sinspired/subs-check-pro-webui
+          go list -f '{{.Dir}}' github.com/sinspired/subs-check-pro-webui/webui
+
+      - name: Download all dependencies
+        run: go mod download
+
+      - name: Check embedded WebUI JavaScript syntax
+        shell: bash
+        run: |
+          webui_dir="$(go list -f '{{.Dir}}' github.com/sinspired/subs-check-pro-webui/webui)"
+          test -n "$webui_dir"
+          node --check "$webui_dir/static/js/admin.js"
+
+      # 上游部分测试会访问真实测速源、Cloudflare、MinIO 或通知服务，不适合作为无凭据 CI 单元测试。
+      - name: Run deterministic unit tests
+        run: go test ./proxy/parse ./check
+
+      - name: Vet all Go packages
+        run: go vet ./...
+
+      - name: Build Linux amd64 validation binary
+        env:
+          CGO_ENABLED: 1
+        run: |
+          mkdir -p dist
+          go build -tags=netgo,osusergo -o dist/subs-check-pro .

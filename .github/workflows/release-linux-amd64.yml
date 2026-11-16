@@ -1,0 +1,164 @@
+name: Build and publish Linux amd64 release
+
+on:
+  push:
+    branches:
+      - main
+      - fix/public-substore-endpoint
+    paths:
+      - '.github/workflows/release-linux-amd64.yml'
+      - 'go.mod'
+      - 'go.sum'
+      - '**.go'
+      - 'webui/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version (for example v3.6.2)
+        required: true
+        default: v3.6.2
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: linux-amd64-release-${{ inputs.version || 'v3.6.2' }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate release version and ensure tag is unused
+        id: version
+        env:
+          VERSION: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid stable version: $VERSION"
+            exit 1
+          fi
+          if ! fork_refs="$(git ls-remote https://github.com/${GITHUB_REPOSITORY}.git "refs/tags/$VERSION")"; then
+            echo "Unable to verify tags in the fork; refusing to publish."
+            exit 1
+          fi
+          if [[ -n "$fork_refs" ]]; then
+            echo "Tag $VERSION already exists in this fork."
+            exit 1
+          fi
+          if ! upstream_refs="$(git ls-remote https://github.com/sinspired/subs-check-pro.git "refs/tags/$VERSION")"; then
+            echo "Unable to verify upstream tags; refusing to publish."
+            exit 1
+          fi
+          if [[ -n "$upstream_refs" ]]; then
+            echo "Tag $VERSION already exists upstream. Choose a new version to avoid ambiguity."
+            exit 1
+          fi
+          echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout the verified fix branch
+        uses: actions/checkout@v7
+        with:
+          ref: fix/public-substore-endpoint
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Resolve pinned WebUI and validate frontend
+        run: |
+          set -euo pipefail
+          go mod download github.com/sinspired/subs-check-pro-webui
+          webui_dir="$(go list -f '{{.Dir}}' github.com/sinspired/subs-check-pro-webui/webui)"
+          test -n "$webui_dir"
+          node --check "$webui_dir/static/js/admin.js"
+
+      - name: Run deterministic tests and static analysis
+        run: |
+          set -euo pipefail
+          go mod download
+          go test ./proxy/parse ./check
+          go vet ./...
+
+      - name: Build static Linux amd64 binary with upstream cross toolchain
+        env:
+          VERSION: ${{ steps.version.outputs.tag }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/work" -w /work \
+            -e VERSION="$VERSION" -e COMMIT="$COMMIT" \
+            --entrypoint bash \
+            goreleaser/goreleaser-cross:latest \
+            -lc '
+              set -euo pipefail
+              git config --global --add safe.directory /work
+              go mod download
+              CGO_ENABLED=1 CC=x86_64-linux-gnu-gcc CXX=x86_64-linux-gnu-g++ \
+                go build -trimpath -tags=netgo,osusergo \
+                -ldflags="-s -w -extldflags \"-static -Wl,-z,stack-size=8388608\" -X main.Version=${VERSION#v} -X main.CurrentCommit=${COMMIT:0:7}" \
+                -o dist/subs-check-pro .
+            '
+
+      - name: Verify binary architecture, static linkage, version and embedded endpoint
+        env:
+          VERSION: ${{ inputs.version || 'v3.6.2' }}
+        run: |
+          set -euo pipefail
+          test -s dist/subs-check-pro
+          file dist/subs-check-pro | grep -E 'ELF 64-bit.*x86-64'
+          if ldd dist/subs-check-pro 2>&1 | grep -q 'not a dynamic executable'; then
+            :
+          else
+            echo "Binary is not confirmed as statically linked:"
+            ldd dist/subs-check-pro || true
+            exit 1
+          fi
+          strings dist/subs-check-pro | grep -F "cheap-host1.cheapyun.com:18299" >/dev/null
+          strings dist/subs-check-pro | grep -F "${VERSION#v}" >/dev/null
+          sha256sum dist/subs-check-pro | tee dist/SHA256SUMS
+          printf 'Version: %s\nCommit: %s\n' "$VERSION" "${GITHUB_SHA}" > dist/BUILD-INFO.txt
+
+      - name: Upload build artifact for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: subs-check-pro-linux-amd64-${{ steps.version.outputs.tag }}
+          path: |
+            dist/subs-check-pro
+            dist/SHA256SUMS
+            dist/BUILD-INFO.txt
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release with Linux amd64 assets only
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          target_commitish: fix/public-substore-endpoint
+          name: Subs-Check PRO ${{ steps.version.outputs.tag }} (custom Sub-Store endpoint)
+          body: |
+            This release is built from the `fix/public-substore-endpoint` branch.
+
+            - Uses the pinned WebUI fork with the custom Sub-Store endpoint for `cheap-host1.cheapyun.com:18299`.
+            - Includes the Linux amd64 static binary only.
+            - Existing server configuration, API key, random Sub-Store path and output data are not changed by this release.
+            - SHA-256 checksum is provided in `SHA256SUMS`.
+          draft: false
+          prerelease: false
+          files: |
+            dist/subs-check-pro
+            dist/SHA256SUMS
+            dist/BUILD-INFO.txt

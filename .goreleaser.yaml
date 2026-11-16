@@ -3,7 +3,7 @@ version: 2
 before:
   hooks:
     - go mod tidy
-    - go get -u github.com/sinspired/subs-check-pro-webui
+    # WebUI 来源和版本由 go.mod 的 replace 固定，避免发布时自动切回上游。
     - env GOBIN=/usr/local/bin go install github.com/tc-hib/go-winres@latest
     - go generate ./...
 
