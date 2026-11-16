@@ -91,7 +91,7 @@ jobs:
 
       - name: Build static Linux amd64 binary with upstream cross toolchain
         env:
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ inputs.version || 'v3.6.2' }}
           COMMIT: ${{ github.sha }}
         run: |
           set -euo pipefail
@@ -113,7 +113,7 @@ jobs:
 
       - name: Verify binary architecture, static linkage, version and embedded endpoint
         env:
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ inputs.version || 'v3.6.2' }}
         run: |
           set -euo pipefail
           test -s dist/subs-check-pro
