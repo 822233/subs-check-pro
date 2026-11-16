@@ -15,16 +15,16 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version (for example v3.6.3)
+        description: Release version (for example v3.6.4)
         required: true
-        default: v3.6.3
+        default: v3.6.4
         type: string
 
 permissions:
   contents: write
 
 concurrency:
-  group: linux-amd64-release-${{ inputs.version || 'v3.6.3' }}
+  group: linux-amd64-release-${{ inputs.version || 'v3.6.4' }}
   cancel-in-progress: true
 
 jobs:
@@ -34,7 +34,7 @@ jobs:
       - name: Validate release version and ensure tag is unused
         id: version
         env:
-          VERSION: ${{ inputs.version || 'v3.6.3' }}
+          VERSION: ${{ inputs.version || 'v3.6.4' }}
         run: |
           set -euo pipefail
           if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -116,7 +116,7 @@ jobs:
 
       - name: Verify uncompressed binary architecture, static linkage and contents
         env:
-          VERSION: ${{ inputs.version || 'v3.6.3' }}
+          VERSION: ${{ inputs.version || 'v3.6.4' }}
         run: |
           set -euo pipefail
           test -s dist/subs-check-pro
@@ -130,7 +130,11 @@ jobs:
             printf '%s\n' "$ldd_output"
             exit 1
           fi
-          strings dist/subs-check-pro | grep -F "cheap-host1.cheapyun.com:18299" >/dev/null
+          if strings dist/subs-check-pro | grep -Fq 'cheap-host1.cheapyun.com'; then
+            echo "Private Sub-Store hostname leaked into the binary."
+            exit 1
+          fi
+          strings dist/subs-check-pro | grep -Fq 'sub-store-public-url'
           strings dist/subs-check-pro | grep -F "${VERSION#v}" >/dev/null
           stat -c 'Uncompressed size: %s bytes' dist/subs-check-pro
 
@@ -146,7 +150,7 @@ jobs:
 
       - name: Compress with UPX and verify packed executable
         env:
-          VERSION: ${{ inputs.version || 'v3.6.3' }}
+          VERSION: ${{ inputs.version || 'v3.6.4' }}
         run: |
           set -euo pipefail
           before="$(stat -c %s dist/subs-check-pro)"
@@ -161,7 +165,11 @@ jobs:
           unpacked_info="$(file /tmp/subs-check-pro.unpacked)"
           printf '%s\n' "$unpacked_info"
           grep -Fq 'statically linked' <<<"$unpacked_info"
-          strings /tmp/subs-check-pro.unpacked | grep -F 'cheap-host1.cheapyun.com:18299' >/dev/null
+          if strings /tmp/subs-check-pro.unpacked | grep -Fq 'cheap-host1.cheapyun.com'; then
+            echo "Private Sub-Store hostname leaked into the unpacked binary."
+            exit 1
+          fi
+          strings /tmp/subs-check-pro.unpacked | grep -Fq 'sub-store-public-url'
           strings /tmp/subs-check-pro.unpacked | grep -F "${VERSION#v}" >/dev/null
           rm -f /tmp/subs-check-pro.unpacked
           sha256sum dist/subs-check-pro | tee dist/SHA256SUMS
@@ -183,11 +191,11 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           target_commitish: ${{ github.sha }}
-          name: Subs-Check PRO ${{ steps.version.outputs.tag }} (custom Sub-Store endpoint)
+          name: Subs-Check PRO ${{ steps.version.outputs.tag }} (configurable Sub-Store URL)
           body: |
             This release is built from the exact triggering commit on the selected branch.
 
-            - Uses the pinned WebUI fork with the custom Sub-Store endpoint for `cheap-host1.cheapyun.com:18299`.
+            - Uses the pinned WebUI fork with a runtime-configurable Sub-Store public URL (`sub-store-public-url` or `SUB_STORE_PUBLIC_URL`).
             - Includes the Linux amd64 static binary only.
             - Existing server configuration, API key, random Sub-Store path and output data are not changed by this release.
             - SHA-256 checksum is provided in `SHA256SUMS`.
