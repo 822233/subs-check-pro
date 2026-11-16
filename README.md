@@ -70,18 +70,18 @@ sub-store-public-url: 'http://<你的公网主机>:<端口>'
 
 请优先从本仓库的 [Releases](https://github.com/822233/subs-check-pro/releases) 页面下载，不要误下上游仓库的 Release。
 
-### 当前发布版本：v3.6.5
+### 当前发布版本：v3.6.6
 
 | 项目 | 信息 |
 | --- | --- |
-| 版本 | `v3.6.5` |
+| 版本 | `v3.6.6` |
 | 平台 | Linux |
 | CPU 架构 | amd64 / x86_64 |
 | 文件大小 | 约 55.1 MB |
 | 校验 | 提供 `SHA256SUMS` |
 | 构建信息 | 提供 `BUILD-INFO.txt` |
 
-下载：**[进入 v3.6.5 Release](https://github.com/822233/subs-check-pro/releases/tag/v3.6.5)**
+下载：**[进入 v3.6.6 Release](https://github.com/822233/subs-check-pro/releases/tag/v3.6.6)**
 
 Linux amd64 用户请根据 Release 资产名称下载对应的二进制文件及校验文件。不要将 amd64 文件用于 ARM64、ARM 或其他架构的设备。
 
@@ -95,15 +95,11 @@ sha256sum -c SHA256SUMS
 
 校验结果应显示对应文件为 `OK`。如果校验失败，请重新下载，不要运行文件。
 
-本次 v3.6.5 已通过 Linux amd64 构建、产物架构与静态链接检查、UPX 压缩完整性检查及解压复核。Release 资产已上传，且已从下载的构建产物执行 SHA256 校验。SHA256：
-
-```text
-8ab9a1bb67ebb81d5067892b7387229b91a0f2179efcc67f552acae38bd2b29d
-```
+本次 v3.6.6 的构建、架构、静态链接、UPX 压缩与解压完整性检查结果，以本仓库 Release 附件及构建日志为准。构建成功后补充实际 SHA256 校验值。
 
 > **部署状态说明：** Release 产物构建与上传成功，不代表所有用户环境均已完成部署验证。请按下方步骤在自己的服务器上备份现有配置、替换程序并检查服务日志及 WebUI 功能。
 >
-> **版本提醒：** v3.6.4 已被 v3.6.5 取代。v3.6.4 的 `SHA256SUMS` 文件记录路径不匹配下载后的文件名，请使用 v3.6.5。
+> **版本提醒：** v3.6.4 已被 v3.6.6 取代。v3.6.4 的 `SHA256SUMS` 文件记录路径不匹配下载后的文件名，请使用 v3.6.6。
 
 ## 🚀 Linux amd64 快速部署
 
@@ -119,7 +115,7 @@ uname -m
 
 ### 2. 下载并校验
 
-从 [v3.6.5 Release](https://github.com/822233/subs-check-pro/releases/tag/v3.6.5) 下载二进制文件及 `SHA256SUMS`，放到服务器同一目录后执行：
+从 [v3.6.6 Release](https://github.com/822233/subs-check-pro/releases/tag/v3.6.6) 下载二进制文件及 `SHA256SUMS`，放到服务器同一目录后执行：
 
 ```bash
 sha256sum -c SHA256SUMS
@@ -135,7 +131,7 @@ sha256sum -c SHA256SUMS
 
 ### 5. 配置 Sub-Store 公网入口
 
-升级到 v3.6.5 后，在服务器实际使用的配置文件中设置一次：
+升级到 v3.6.6 后，在服务器实际使用的配置文件中设置一次：
 
 ```yaml
 sub-store-public-url: 'http://<你的公网主机>:<端口>'
