@@ -10,6 +10,8 @@ before:
 release:
   # 自动检测是否为预发布版本 (如 v2.5.0-rc.1 会自动标记为 Pre-release)
   prerelease: auto
+  # 已存在的 Release 说明保持原样，避免覆盖维护者手动编辑的中文内容。
+  mode: keep-existing
 
   # Release 标题与底部说明统一使用中文，并指向当前 Fork 仓库
   name_template: "Subs-Check PRO {{ .Tag }}（中文修复维护版）"
