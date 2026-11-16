@@ -99,18 +99,18 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          docker run --rm \\
-            -v "$GITHUB_WORKSPACE:/work" -w /work \\
-            -e VERSION="$VERSION" -e COMMIT="$COMMIT" \\
-            --entrypoint bash \\
-            goreleaser/goreleaser-cross:latest \\
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/work" -w /work \
+            -e VERSION="$VERSION" -e COMMIT="$COMMIT" \
+            --entrypoint bash \
+            goreleaser/goreleaser-cross:latest \
             -lc '
               set -euo pipefail
               git config --global --add safe.directory /work
               go mod download
-              CGO_ENABLED=1 CC=x86_64-linux-gnu-gcc CXX=x86_64-linux-gnu-g++ \\
-                go build -trimpath -tags=netgo,osusergo \\
-                -ldflags="-s -w -extldflags \\"-static -Wl,-z,stack-size=8388608\\" -X main.Version=${VERSION#v} -X main.CurrentCommit=${COMMIT:0:7}" \\
+              CGO_ENABLED=1 CC=x86_64-linux-gnu-gcc CXX=x86_64-linux-gnu-g++ \
+                go build -trimpath -tags=netgo,osusergo \
+                -ldflags="-s -w -extldflags \"-static -Wl,-z,stack-size=8388608\" -X main.Version=${VERSION#v} -X main.CurrentCommit=${COMMIT:0:7}" \
                 -o dist/subs-check-pro .
             '
 
@@ -121,13 +121,13 @@ jobs:
           set -euo pipefail
           test -s dist/subs-check-pro
           file_output="$(file dist/subs-check-pro)"
-          printf '%s\\n' "$file_output"
+          printf '%s\n' "$file_output"
           grep -E 'ELF 64-bit.*x86-64' <<<"$file_output"
           grep -Fq 'statically linked' <<<"$file_output"
           ldd_output="$(ldd dist/subs-check-pro 2>&1 || true)"
           if ! grep -Fq 'not a dynamic executable' <<<"$ldd_output"; then
             echo "未能确认程序为静态链接："
-            printf '%s\\n' "$ldd_output"
+            printf '%s\n' "$ldd_output"
             exit 1
           fi
           strings dist/subs-check-pro | grep -Fq 'sub-store-public-url'
@@ -159,13 +159,13 @@ jobs:
           grep -E 'ELF 64-bit.*x86-64' /tmp/packed-file.txt
           upx -d -o /tmp/subs-check-pro.unpacked dist/subs-check-pro
           unpacked_info="$(file /tmp/subs-check-pro.unpacked)"
-          printf '%s\\n' "$unpacked_info"
+          printf '%s\n' "$unpacked_info"
           grep -Fq 'statically linked' <<<"$unpacked_info"
           strings /tmp/subs-check-pro.unpacked | grep -Fq 'sub-store-public-url'
           strings /tmp/subs-check-pro.unpacked | grep -F "${VERSION#v}" >/dev/null
           rm -f /tmp/subs-check-pro.unpacked
           (cd dist && sha256sum subs-check-pro > SHA256SUMS)
-          printf '版本：%s\\n提交：%s\\nUPX：5.3.0 (--best)\\n' "$VERSION" "${GITHUB_SHA}" > dist/BUILD-INFO.txt
+          printf '版本：%s\n提交：%s\nUPX：5.3.0 (--best)\n' "$VERSION" "${GITHUB_SHA}" > dist/BUILD-INFO.txt
 
       - name: 上传构建产物供检查
         uses: actions/upload-artifact@v4
