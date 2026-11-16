@@ -1,4 +1,4 @@
-name: Release
+name: 中文版本发布
 
 on:
   push:
@@ -57,12 +57,16 @@ jobs:
             | head -n1)
           echo "tag=$prev" >> $GITHUB_OUTPUT
 
-      - name: Delete existing release
-        run: |
-          gh release view ${{ github.ref_name }} &>/dev/null && \
-            gh release delete ${{ github.ref_name }} --yes || true
+      - name: 保存已有 Release 说明
+        id: existing_release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "${GITHUB_REF_NAME}" --json body -q .body > "$RUNNER_TEMP/existing-release-body.md" 2>/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
 
       # 自动发布到 GitHub Releases 和 Docker Hub，使用 .goreleaser.yaml 中的配置
       # 正式版发布时忽略两个正式版中间的预览版标签
@@ -84,6 +88,13 @@ jobs:
             --entrypoint bash \
             goreleaser/goreleaser-cross:latest \
             -c "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y upx && git config --global --add safe.directory '*' && goreleaser release --clean"
+
+      - name: 恢复已有 Release 说明
+        if: steps.existing_release.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit "${GITHUB_REF_NAME}" --notes-file "$RUNNER_TEMP/existing-release-body.md"
 
   notify:
     if: github.ref != 'refs/heads/v2'
