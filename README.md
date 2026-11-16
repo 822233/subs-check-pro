@@ -7,6 +7,8 @@
 High-performance proxy subscription checker.
 </p>
 
+> **搜索关键词 / Search keywords：** Sub-Store 公网入口无法访问、Sub-Store 分享链接地址错误、Subs-Check Pro 自定义后端、Sub-Store URL 修复、Linux amd64 订阅检查、proxy subscription checker、Sub-Store public URL、self-hosted Sub-Store。
+
 > [!IMPORTANT]
 > **本仓库是基于上游 `sinspired/subs-check-pro` 的独立修复维护版本，不是上游官方发布。**
 >
