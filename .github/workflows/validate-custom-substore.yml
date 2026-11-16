@@ -1,0 +1,48 @@
+name: Validate custom Sub-Store endpoint
+
+on:
+  push:
+    branches:
+      - fix/public-substore-endpoint
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Download pinned dependencies
+        run: go mod download
+
+      - name: Check embedded WebUI JavaScript syntax
+        shell: bash
+        run: |
+          webui_dir="$(go list -m -f '{{.Dir}}' github.com/sinspired/subs-check-pro-webui)"
+          test -n "$webui_dir"
+          node --check "$webui_dir/webui/static/js/admin.js"
+
+      - name: Test Go packages
+        run: go test ./...
+
+      - name: Build Linux amd64 validation binary
+        env:
+          CGO_ENABLED: 1
+        run: |
+          mkdir -p dist
+          go build -tags=netgo,osusergo -o dist/subs-check-pro .
