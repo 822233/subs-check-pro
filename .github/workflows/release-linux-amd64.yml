@@ -30,11 +30,19 @@ jobs:
             echo "Invalid stable version: $VERSION"
             exit 1
           fi
-          if git ls-remote --exit-code https://github.com/${GITHUB_REPOSITORY}.git "refs/tags/$VERSION" >/dev/null 2>&1; then
+          if ! fork_refs="$(git ls-remote https://github.com/${GITHUB_REPOSITORY}.git "refs/tags/$VERSION")"; then
+            echo "Unable to verify tags in the fork; refusing to publish."
+            exit 1
+          fi
+          if [[ -n "$fork_refs" ]]; then
             echo "Tag $VERSION already exists in this fork."
             exit 1
           fi
-          if git ls-remote --exit-code https://github.com/sinspired/subs-check-pro.git "refs/tags/$VERSION" >/dev/null 2>&1; then
+          if ! upstream_refs="$(git ls-remote https://github.com/sinspired/subs-check-pro.git "refs/tags/$VERSION")"; then
+            echo "Unable to verify upstream tags; refusing to publish."
+            exit 1
+          fi
+          if [[ -n "$upstream_refs" ]]; then
             echo "Tag $VERSION already exists upstream. Choose a new version to avoid ambiguity."
             exit 1
           fi
@@ -82,8 +90,9 @@ jobs:
           docker run --rm \
             -v "$GITHUB_WORKSPACE:/work" -w /work \
             -e VERSION="$VERSION" -e COMMIT="$COMMIT" \
+            --entrypoint bash \
             goreleaser/goreleaser-cross:latest \
-            bash -lc '
+            -lc '
               set -euo pipefail
               git config --global --add safe.directory /work
               go mod download
