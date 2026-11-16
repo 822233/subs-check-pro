@@ -204,4 +204,4 @@ require (
 	gopkg.in/ini.v1 v1.68.0 // indirect
 )
 // 使用本仓库维护的 WebUI 修复版：仅替换模块来源，不改变原有导入路径。
-replace github.com/sinspired/subs-check-pro-webui => github.com/822233/subs-check-pro-webui v0.0.0-20261116024907-4285340af5ff
+replace github.com/sinspired/subs-check-pro-webui => github.com/822233/subs-check-pro-webui v0.0.0-20261116104916-17085af574c8
