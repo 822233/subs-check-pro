@@ -1,6 +1,6 @@
 <!-- 项目logo -->
 <p align="center">
-<a href="https://sinspired.github.io/subs-check-pro/"><img src="https://raw.githubusercontent.com/sinspired/subs-check-pro/main/doc/logo/logo.png" alt="Project Logo" width="200"/></a>
+<a href="https://sinspired.github.io/subs-check-pro/"><img src="https://raw.githubusercontent.com/sinspired/subs-check-pro/main/doc/logo/logo.png" alt="项目标识" width="200"/></a>
 </p>
 <h1 align="center">Subs-Check⁺ PRO</h1>
 <p align="center" color="#6a737d">
@@ -159,15 +159,15 @@ sub-store-public-url: 'http://<你的公网主机>:<端口>'
 ---
 
 <p align="center">
-<a href="https://github.com/sinspired/subs-check-pro/releases"><img src="https://img.shields.io/github/v/release/sinspired/subs-check-pro?logo=github&include_prereleases"/></a>
+<a href="https://github.com/sinspired/subs-check-pro/releases"><img src="https://img.shields.io/github/v/release/822233/subs-check-pro?logo=github&include_prereleases"/></a>
 <a href="https://hub.docker.com/r/sinspired/subs-check-pro"><img src="https://img.shields.io/docker/pulls/sinspired/subs-check-pro?logo=docker" /></a>
-<a href="https://ghcr.io/sinspired/subs-check-pro"><img src="https://img.shields.io/badge/ghcr.io-online-blue?logo=github"/></a>
+<a href="https://ghcr.io/822233/subs-check-pro"><img src="https://img.shields.io/badge/ghcr.io-online-blue?logo=github"/></a>
 <a href="https://sinspired.github.io/subs-check-pro/"><img alt="doc-site" src="https://img.shields.io/website?url=https%3A%2F%2Fsinspired.github.io%2Fsubs-check-pro%2F&up_message=online&down_message=offline&down_color=red&logo=docusaurus&label=%E6%96%87%E6%A1%A3" /></a>
 <a href="https://github.com/sinspired/subs-check-pro/wiki"><img alt="Wiki" src="https://img.shields.io/badge/Wiki-docs-blue?logo=github" /></a>
 <a href="https://github.com/sinspired/subs-free"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/sinspired/subs-free?include_prereleases&display_name=release&style=flat&logo=wails&logoColor=E2434B&label=%E8%B7%A8%E5%B9%B3%E5%8F%B0%E7%8E%B0%E4%BB%A3GUI" /></a>
 </p>
 
-# 🚀 网络代理质量检测工具
+# 🚀 Subs-Check PRO 中文修复维护版
 
 **测活、测速、媒体解锁**，网络质量检测工具。采用全新设计，适配 PC 和手机设备的现代 WebUI 配置管理界面，自动生成 `mihomo` 和 `sing-box` 订阅，集成 `sub-store` 前端和后端，支持一键复制分享，可在高并发运行时保持低内存占用；支持自动无缝版本更新。
 
@@ -312,7 +312,7 @@ docker run -d \
   -v ./config:/app/config \
   -v ./output:/app/output \
   --restart always \
-  ghcr.io/sinspired/subs-check-pro:latest
+  ghcr.io/822233/subs-check-pro:latest
 ```
 
 💡 记录 `api-key`，访问 WebUi
