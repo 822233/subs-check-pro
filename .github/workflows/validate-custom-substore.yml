@@ -27,7 +27,12 @@ jobs:
         with:
           node-version: 22
 
-      - name: Download pinned dependencies
+      - name: Resolve the pinned WebUI fork
+        run: |
+          go mod download -json github.com/sinspired/subs-check-pro-webui@v1.8.4
+          go list -m -json github.com/sinspired/subs-check-pro-webui
+
+      - name: Download all dependencies
         run: go mod download
 
       - name: Check embedded WebUI JavaScript syntax
