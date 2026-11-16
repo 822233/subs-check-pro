@@ -15,16 +15,16 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version (for example v3.6.4)
+        description: Release version (for example v3.6.5)
         required: true
-        default: v3.6.4
+        default: v3.6.5
         type: string
 
 permissions:
   contents: write
 
 concurrency:
-  group: linux-amd64-release-${{ inputs.version || 'v3.6.4' }}
+  group: linux-amd64-release-${{ inputs.version || 'v3.6.5' }}
   cancel-in-progress: true
 
 jobs:
@@ -34,7 +34,7 @@ jobs:
       - name: Validate release version and ensure tag is unused
         id: version
         env:
-          VERSION: ${{ inputs.version || 'v3.6.4' }}
+          VERSION: ${{ inputs.version || 'v3.6.5' }}
         run: |
           set -euo pipefail
           if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -116,7 +116,7 @@ jobs:
 
       - name: Verify uncompressed binary architecture, static linkage and contents
         env:
-          VERSION: ${{ inputs.version || 'v3.6.4' }}
+          VERSION: ${{ inputs.version || 'v3.6.5' }}
         run: |
           set -euo pipefail
           test -s dist/subs-check-pro
@@ -146,7 +146,7 @@ jobs:
 
       - name: Compress with UPX and verify packed executable
         env:
-          VERSION: ${{ inputs.version || 'v3.6.4' }}
+          VERSION: ${{ inputs.version || 'v3.6.5' }}
         run: |
           set -euo pipefail
           before="$(stat -c %s dist/subs-check-pro)"
@@ -164,7 +164,7 @@ jobs:
           strings /tmp/subs-check-pro.unpacked | grep -Fq 'sub-store-public-url'
           strings /tmp/subs-check-pro.unpacked | grep -F "${VERSION#v}" >/dev/null
           rm -f /tmp/subs-check-pro.unpacked
-          sha256sum dist/subs-check-pro | tee dist/SHA256SUMS
+          (cd dist && sha256sum subs-check-pro > SHA256SUMS)
           printf 'Version: %s\nCommit: %s\nUPX: 5.3.0 (--best)\n' "$VERSION" "${GITHUB_SHA}" > dist/BUILD-INFO.txt
 
       - name: Upload build artifact for inspection
