@@ -552,16 +552,17 @@ func (pc *ProxyChecker) run(proxies []map[string]any) ([]Result, []map[string]an
 	go pc.runAliveStage(ctx, geoDB)
 	go pc.runSpeedStage(ctx, cancel)
 	pc.runMediaStageAndCollect(geoDB, ctx, cancel)
-	// 在原有测活/测速/媒体检测全部结束后，再执行独立延迟筛选。
-	pc.filterResultsByLatency()
 
-	// 流水线已结束，停止探针，并输出保护机制是否介入的摘要，便于定位「变慢」是否与保护有关
+	// 原有检测流水线结束后先停止本机网络探针，避免探针流量干扰节点延迟测量。
 	probeCancel()
 	if netGuardOn {
 		if text, intervened := utils.NetGuard.Summary(); intervened {
 			slog.Info(text)
 		}
 	}
+
+	// 在测活/测速/媒体检测及网络探针全部结束后，再执行独立延迟筛选。
+	pc.filterResultsByLatency()
 
 	// 关闭历史节点收集并按分数排序
 	close(pc.historyChan)
