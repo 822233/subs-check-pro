@@ -203,5 +203,6 @@ require (
 	google.golang.org/protobuf v1.36.12 // indirect
 	gopkg.in/ini.v1 v1.68.0 // indirect
 )
+
 // 使用本仓库维护的 WebUI 修复版：仅替换模块来源，不改变原有导入路径。
-replace github.com/sinspired/subs-check-pro-webui => github.com/822233/subs-check-pro-webui v0.0.0-20261116105305-f97d33061e48
+replace github.com/sinspired/subs-check-pro-webui => github.com/822233/subs-check-pro-webui v0.0.0-20261116150831-e277cd2da61f

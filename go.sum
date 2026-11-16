@@ -2,6 +2,8 @@ code.gitea.io/sdk/gitea v0.25.1 h1:yywxWwoV+SdjHtbC6unBiXojWdZOtoHuGhEazEXeWuE=
 code.gitea.io/sdk/gitea v0.25.1/go.mod h1:uDFWYBU8dgZsgOHwe6C/6olxvf8FHguNB3wW1i83fgg=
 github.com/42wim/httpsig v1.3.0 h1:HK2bieeZ99X9IvOoc1ST6yrhLek0f4MqlEGES2JCP3g=
 github.com/42wim/httpsig v1.3.0/go.mod h1:lgC3Yrvp4lxi1odEF1ge3kQBu/VM+SRcZQu5YwiR3dU=
+github.com/822233/subs-check-pro-webui v0.0.0-20261116150831-e277cd2da61f h1:WqEf3iJo97U8DASKRAvGTeH16hqPtKWjkrIhtyQavFk=
+github.com/822233/subs-check-pro-webui v0.0.0-20261116150831-e277cd2da61f/go.mod h1:rg8DBZnTSh5/5tHCwQJrMVX6tKqqI5m8BrTT+gCB92M=
 github.com/Masterminds/semver/v3 v3.5.0 h1:kQceYJfbupGfZOKZQg0kou0DgAKhzDg2NZPAwZ/2OOE=
 github.com/Masterminds/semver/v3 v3.5.0/go.mod h1:4V+yj/TJE1HU9XfppCwVMZq3I84lprf4nC11bSS5beM=
 github.com/ProtonMail/go-crypto v1.5.2 h1:cucYnvqcY7UOXVD//mSyjeaPY0SSN3v5cDkYPxumINk=
@@ -354,8 +356,6 @@ github.com/sina-ghaderi/rabbitio v0.0.0-20220730151941-9ce26f4f872e h1:ur8uMsPIF
 github.com/sina-ghaderi/rabbitio v0.0.0-20220730151941-9ce26f4f872e/go.mod h1:+e5fBW3bpPyo+3uLo513gIUblc03egGjMM0+5GKbzK8=
 github.com/sinspired/checkip v0.5.6 h1:eJG0GQZdwpwCg1nnKAH4FeYSWwIiI+DIJGWZ/HOQBGk=
 github.com/sinspired/checkip v0.5.6/go.mod h1:bLaDeobpiwXZ2J5wXekSnpDBLv7J5LOLxnzJ4A1grrM=
-github.com/sinspired/subs-check-pro-webui v1.8.4 h1:9QOmJsZW2a5DfuxMhMkLXV0j1CveLqeYdlYZXRDf9Zw=
-github.com/sinspired/subs-check-pro-webui v1.8.4/go.mod h1:rg8DBZnTSh5/5tHCwQJrMVX6tKqqI5m8BrTT+gCB92M=
 github.com/sirupsen/logrus v1.10.2 h1:G2SED73/qrAu6YwbdxOD6peLkCBI3z7L+ykJFTXJBBo=
 github.com/sirupsen/logrus v1.10.2/go.mod h1:SLEg8TqYulVKKfIGHldVp2K2aYz2DKSVBq4g/H5bR7Q=
 github.com/sohaha/zlsgo v1.7.22 h1:xJC0oXpUdHDHaoWhsujdsoIRHFOcxafY77ccXkjWtUQ=
