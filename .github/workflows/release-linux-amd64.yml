@@ -1,6 +1,15 @@
 name: Build and publish Linux amd64 release
 
 on:
+  push:
+    branches:
+      - fix/public-substore-endpoint
+    paths:
+      - '.github/workflows/release-linux-amd64.yml'
+      - 'go.mod'
+      - 'go.sum'
+      - '**.go'
+      - 'webui/**'
   workflow_dispatch:
     inputs:
       version:
@@ -13,7 +22,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: linux-amd64-release-${{ inputs.version }}
+  group: linux-amd64-release-${{ inputs.version || 'v3.6.2' }}
   cancel-in-progress: false
 
 jobs:
@@ -23,7 +32,7 @@ jobs:
       - name: Validate release version and ensure tag is unused
         id: version
         env:
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ inputs.version || 'v3.6.2' }}
         run: |
           set -euo pipefail
           if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -124,7 +133,7 @@ jobs:
       - name: Upload build artifact for inspection
         uses: actions/upload-artifact@v4
         with:
-          name: subs-check-pro-linux-amd64-${{ inputs.version }}
+          name: subs-check-pro-linux-amd64-${{ inputs.version || 'v3.6.2' }}
           path: |
             dist/subs-check-pro
             dist/SHA256SUMS
@@ -135,9 +144,9 @@ jobs:
       - name: Publish GitHub Release with Linux amd64 assets only
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ inputs.version }}
+          tag_name: ${{ inputs.version || 'v3.6.2' }}
           target_commitish: fix/public-substore-endpoint
-          name: Subs-Check PRO ${{ inputs.version }} (custom Sub-Store endpoint)
+          name: Subs-Check PRO ${{ inputs.version || 'v3.6.2' }} (custom Sub-Store endpoint)
           body: |
             This release is built from the `fix/public-substore-endpoint` branch.
 
