@@ -33,7 +33,7 @@ jobs:
       - name: Validate release version and ensure tag is unused
         id: version
         env:
-          VERSION: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ inputs.version || 'v3.6.2' }}
         run: |
           set -euo pipefail
           if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
