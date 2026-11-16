@@ -4,7 +4,7 @@
 </p>
 <h1 align="center">Subs-Check⁺ PRO</h1>
 <p align="center" color="#6a737d">
-High-performance proxy subscription checker.
+高性能代理订阅检测工具，提供 Sub-Store 公网入口与分享链接修复。
 </p>
 
 > **搜索关键词 / Search keywords：** Sub-Store 公网入口无法访问、Sub-Store 分享链接地址错误、Subs-Check Pro 自定义后端、Sub-Store URL 修复、Linux amd64 订阅检查、proxy subscription checker、Sub-Store public URL、self-hosted Sub-Store。
@@ -201,7 +201,7 @@ sub-store-public-url: 'http://<你的公网主机>:<端口>'
 - [x] 📡 支持检测 `isp` 类型、`原生/广播IP`、住宅/机房
 - [x] 📂 内置文件管理页面（`/files`），方便查看与下载生成文件
 - [x] 📈 检测结果分析报告（`/analysis`），含地理位置与协议分布可视化
-- [ ] 🚧 本项目现接受 issue 反馈
+- [x] 本仓库提供独立修复维护；当前未启用 GitHub Issues，问题反馈请通过 Pull Request 或上游项目交流渠道进行。
 
 ### 📖 教程（Wiki）
 
@@ -213,10 +213,12 @@ sub-store-public-url: 'http://<你的公网主机>:<端口>'
 - 📕 [内置文件服务](https://github.com/sinspired/subs-check-pro/wiki/File-Service)
 - 📖 [自建GitHub代理（支持提高api速率和gist加速）](https://github.com/sinspired/CF-Proxy)
 
-### 📣 使用交流，功能讨论，issue 反馈，新版本通知
+### 📣 上游项目交流与新版本信息
 
-- > Telegram 群组：[subs-check性能版](https://t.me/subs_check_pro)⁠
-- > Telegram 频道：[关注频道](https://t.me/sinspired_ai)⁠
+以下为上游项目提供的交流及通知渠道，并非本 Fork 的专属支持渠道：
+
+- Telegram 群组：[上游项目交流群](https://t.me/subs_check_pro)
+- Telegram 频道：[上游项目通知频道](https://t.me/sinspired_ai)
 
 > [!TIP]
 >
@@ -441,10 +443,11 @@ speed-test-url: https://custom-domain/speedtest?bytes=1073741824
 
 ## 🤝 贡献与开发
 
-- 欢迎提交 PR 与 Issue，一起完善项目。
+- 欢迎针对本仓库的独立修复提交 Pull Request。
+- 本仓库当前未启用 GitHub Issues；使用问题可参考上游文档，或通过上游项目公开交流渠道讨论。
 
 ```bash
-git clone https://github.com/sinspired/subs-check-pro
+git clone https://github.com/822233/subs-check-pro.git
 cd subs-check-pro
 ```
 
