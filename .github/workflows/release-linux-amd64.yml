@@ -23,7 +23,7 @@ permissions:
 
 concurrency:
   group: linux-amd64-release-${{ inputs.version || 'v3.6.2' }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build:
