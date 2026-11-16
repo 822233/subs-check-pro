@@ -74,7 +74,7 @@ max-latency: 300
 latency-test-url: 'https://www.gstatic.com/generate_204'
 # 单节点延迟测试超时时间(毫秒)
 latency-test-timeout: 5000
-# 延迟测试并发数；低配服务器建议保持 10-20
+# 延迟测试并发数；默认 20，程序最多使用 64，低配服务器建议保持 10-20
 latency-concurrent: 20
 
 # 并发线程数，用于未设置测活、测速、媒体解锁检测时，自动计算并发数的基准

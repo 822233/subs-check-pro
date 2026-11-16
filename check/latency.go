@@ -51,7 +51,7 @@ func (pc *ProxyChecker) filterResultsByLatency() {
 	if concurrency <= 0 {
 		concurrency = 20
 	}
-	concurrency = min(concurrency, len(pc.results))
+	concurrency = min(concurrency, min(len(pc.results), 64))
 
 	requestTimeout := time.Duration(timeoutMS) * time.Millisecond
 	total := len(pc.results)
