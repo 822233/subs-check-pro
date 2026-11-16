@@ -29,8 +29,8 @@ jobs:
 
       - name: Resolve the pinned WebUI fork
         run: |
-          go mod download -json github.com/sinspired/subs-check-pro-webui@v1.8.4
-          go list -m -json github.com/sinspired/subs-check-pro-webui
+          go mod download github.com/sinspired/subs-check-pro-webui
+          go list -f '{{.Dir}}' github.com/sinspired/subs-check-pro-webui/webui
 
       - name: Download all dependencies
         run: go mod download
@@ -38,9 +38,9 @@ jobs:
       - name: Check embedded WebUI JavaScript syntax
         shell: bash
         run: |
-          webui_dir="$(go list -m -f '{{.Dir}}' github.com/sinspired/subs-check-pro-webui)"
+          webui_dir="$(go list -f '{{.Dir}}' github.com/sinspired/subs-check-pro-webui/webui)"
           test -n "$webui_dir"
-          node --check "$webui_dir/webui/static/js/admin.js"
+          node --check "$webui_dir/static/js/admin.js"
 
       - name: Test Go packages
         run: go test ./...
