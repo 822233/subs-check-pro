@@ -141,7 +141,97 @@ sha256sum -c SHA256SUMS
 sub-store-public-url: 'http://<你的公网主机>:<端口>'
 ```
 
-也可以通过环境变量 `SUB_STORE_PUBLIC_URL` 设置。保留原有 `sub-store-port` 和 `sub-store-path`，不要把真实公网地址提交到公开仓库。修改配置后，程序会通过配置监听机制重新加载；如果当前部署未启用配置热加载，再重启服务。
+也可以通过环境变量 `SUB_STORE_PUBLIC_URL` 设置。保留原有 `sub-store-port` 和 `sub-store-path`，不要把真实公网地址提交到公开仓库。
+
+#### 具体配置步骤（以 Linux + systemd 为例）
+
+**第 1 步：找到程序实际使用的配置文件**
+
+先查看服务启动参数：
+
+```bash
+systemctl cat subs-check-pro.service
+```
+
+在输出的 `ExecStart` 中查找 `-f` 后面的配置文件路径。不同安装方式的路径可能不同，以下以：
+
+```text
+/etc/subs-check-pro/config.yaml
+```
+
+为例。请以自己服务器实际显示的路径为准，不要直接照抄示例路径。
+
+**第 2 步：备份并编辑配置文件**
+
+将下面命令中的路径替换为上一步查到的实际路径：
+
+```bash
+CONFIG="/etc/subs-check-pro/config.yaml"
+cp -a "$CONFIG" "$CONFIG.backup-$(date +%Y%m%d-%H%M%S)"
+nano "$CONFIG"
+```
+
+在 YAML 最外层（顶格、不要缩进）添加：
+
+```yaml
+# Sub-Store 公网访问入口
+sub-store-public-url: 'http://<你的公网主机>:<端口>'
+```
+
+例如，如果你现有的 Sub-Store 可以通过 `http://sub.example.com:18299/` 从公网访问，就填写：
+
+```yaml
+sub-store-public-url: 'http://sub.example.com:18299'
+```
+
+注意：
+
+- 将示例地址替换成你自己的 Sub-Store 公网地址，不要填写本项目 WebUI 的地址。
+- 填写协议、主机和端口即可；不要添加 `?api=...` 查询参数或 `#...` 片段。
+- 如果文件中已经存在 `sub-store-public-url:`，只修改原有值，不要再添加第二个同名配置项。
+- 不要删除或修改原有的 `sub-store-port`、`sub-store-path` 等配置。
+- 不要把自己的真实域名、IP、端口或密钥提交到公开仓库。
+
+保存退出 nano：按 `Ctrl+O`，回车保存，再按 `Ctrl+X` 退出。
+
+**第 3 步：重启服务使配置生效**
+
+```bash
+systemctl restart subs-check-pro.service
+systemctl is-active subs-check-pro.service
+```
+
+如果服务名称不是 `subs-check-pro.service`，请替换为自己实际使用的 systemd 服务名称。看到 `active` 表示服务正在运行；如果不是，请先检查日志：
+
+```bash
+journalctl -u subs-check-pro.service -n 80 --no-pager
+```
+
+**第 4 步：验证入口和分享链接**
+
+1. 重新打开 Subs-Check Pro WebUI，必要时强制刷新页面。
+2. 点击首页的「订阅管理」，确认浏览器跳转到刚才配置的 Sub-Store 公网地址。
+3. 生成一条分享链接，检查其基础地址是否也使用该公网入口。
+4. 在其他设备或网络中打开分享链接，确认可以正常访问。
+
+如果仍跳转到旧地址，请先确认修改的是程序实际加载的配置文件，并检查 systemd 服务是否设置了 `SUB_STORE_PUBLIC_URL` 环境变量。不要只凭服务显示 `active` 就判断入口修复成功。
+
+#### 也可以使用环境变量配置
+
+如果不想修改 YAML，也可以在 systemd 服务环境中设置：
+
+```ini
+Environment="SUB_STORE_PUBLIC_URL=http://<你的公网主机>:<端口>"
+```
+
+将其加入服务的 systemd 配置后，执行：
+
+```bash
+systemctl daemon-reload
+systemctl restart subs-check-pro.service
+```
+
+环境变量方式需要确保设置在实际运行程序的服务中；不要同时配置互相冲突的公网地址。
 
 ### 6. 检查修复效果
 
