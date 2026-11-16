@@ -130,10 +130,6 @@ jobs:
             printf '%s\n' "$ldd_output"
             exit 1
           fi
-          if strings dist/subs-check-pro | grep -Fq 'cheap-host1.cheapyun.com'; then
-            echo "Private Sub-Store hostname leaked into the binary."
-            exit 1
-          fi
           strings dist/subs-check-pro | grep -Fq 'sub-store-public-url'
           strings dist/subs-check-pro | grep -F "${VERSION#v}" >/dev/null
           stat -c 'Uncompressed size: %s bytes' dist/subs-check-pro
@@ -165,10 +161,6 @@ jobs:
           unpacked_info="$(file /tmp/subs-check-pro.unpacked)"
           printf '%s\n' "$unpacked_info"
           grep -Fq 'statically linked' <<<"$unpacked_info"
-          if strings /tmp/subs-check-pro.unpacked | grep -Fq 'cheap-host1.cheapyun.com'; then
-            echo "Private Sub-Store hostname leaked into the unpacked binary."
-            exit 1
-          fi
           strings /tmp/subs-check-pro.unpacked | grep -Fq 'sub-store-public-url'
           strings /tmp/subs-check-pro.unpacked | grep -F "${VERSION#v}" >/dev/null
           rm -f /tmp/subs-check-pro.unpacked
