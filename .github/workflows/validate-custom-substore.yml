@@ -3,7 +3,11 @@ name: Validate custom Sub-Store endpoint
 on:
   push:
     branches:
+      - main
       - fix/public-substore-endpoint
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -42,8 +46,12 @@ jobs:
           test -n "$webui_dir"
           node --check "$webui_dir/static/js/admin.js"
 
-      - name: Test Go packages
-        run: go test ./...
+      # 上游部分测试会访问真实测速源、Cloudflare、MinIO 或通知服务，不适合作为无凭据 CI 单元测试。
+      - name: Run deterministic unit tests
+        run: go test ./proxy/parse ./check
+
+      - name: Vet all Go packages
+        run: go vet ./...
 
       - name: Build Linux amd64 validation binary
         env:
