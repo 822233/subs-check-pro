@@ -552,6 +552,8 @@ func (pc *ProxyChecker) run(proxies []map[string]any) ([]Result, []map[string]an
 	go pc.runAliveStage(ctx, geoDB)
 	go pc.runSpeedStage(ctx, cancel)
 	pc.runMediaStageAndCollect(geoDB, ctx, cancel)
+	// 在原有测活/测速/媒体检测全部结束后，再执行独立延迟筛选。
+	pc.filterResultsByLatency()
 
 	// 流水线已结束，停止探针，并输出保护机制是否介入的摘要，便于定位「变慢」是否与保护有关
 	probeCancel()

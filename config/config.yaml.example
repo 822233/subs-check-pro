@@ -63,8 +63,19 @@ proxy-server-nameserver-policy:
   +.github.com: 223.5.5.5
   +.githubusercontent.com: 223.5.5.5
 
-# 超时时间(毫秒)(节点的最大延迟)，主要影响测活任务
+# 测活请求超时时间(毫秒)，不是最终订阅的延迟筛选阈值
 timeout: 6000
+
+# 是否启用独立的节点延迟筛选（默认关闭）
+latency-filter: false
+# 最大允许 HTTP 响应时间(毫秒)，例如 300 表示只保留不超过 300ms 的节点
+max-latency: 300
+# 延迟测试地址：建议使用稳定、支持快速返回 204/2xx 的地址
+latency-test-url: 'https://www.gstatic.com/generate_204'
+# 单节点延迟测试超时时间(毫秒)
+latency-test-timeout: 5000
+# 延迟测试并发数；低配服务器建议保持 10-20
+latency-concurrent: 20
 
 # 并发线程数，用于未设置测活、测速、媒体解锁检测时，自动计算并发数的基准
 # 主要影响获取订阅任务，超过100会设置为100
