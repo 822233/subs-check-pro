@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - fix/public-substore-endpoint
+      - fix/upx-compressed-linux-release
     paths:
       - '.github/workflows/release-linux-amd64.yml'
       - 'go.mod'
@@ -14,16 +15,16 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Release version (for example v3.6.2)
+        description: Release version (for example v3.6.3)
         required: true
-        default: v3.6.2
+        default: v3.6.3
         type: string
 
 permissions:
   contents: write
 
 concurrency:
-  group: linux-amd64-release-${{ inputs.version || 'v3.6.2' }}
+  group: linux-amd64-release-${{ inputs.version || 'v3.6.3' }}
   cancel-in-progress: true
 
 jobs:
@@ -33,7 +34,7 @@ jobs:
       - name: Validate release version and ensure tag is unused
         id: version
         env:
-          VERSION: ${{ inputs.version || 'v3.6.2' }}
+          VERSION: ${{ inputs.version || 'v3.6.3' }}
         run: |
           set -euo pipefail
           if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -113,13 +114,12 @@ jobs:
                 -o dist/subs-check-pro .
             '
 
-      - name: Verify binary architecture, static linkage, version and embedded endpoint
+      - name: Verify uncompressed binary architecture, static linkage and contents
         env:
-          VERSION: ${{ inputs.version || 'v3.6.2' }}
+          VERSION: ${{ inputs.version || 'v3.6.3' }}
         run: |
           set -euo pipefail
           test -s dist/subs-check-pro
-          file dist/subs-check-pro | grep -E 'ELF 64-bit.*x86-64'
           file_output="$(file dist/subs-check-pro)"
           printf '%s\n' "$file_output"
           grep -E 'ELF 64-bit.*x86-64' <<<"$file_output"
@@ -132,8 +132,40 @@ jobs:
           fi
           strings dist/subs-check-pro | grep -F "cheap-host1.cheapyun.com:18299" >/dev/null
           strings dist/subs-check-pro | grep -F "${VERSION#v}" >/dev/null
+          stat -c 'Uncompressed size: %s bytes' dist/subs-check-pro
+
+      - name: Install pinned UPX
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 -o /tmp/upx.tar.xz https://github.com/upx/upx/releases/download/v5.3.0/upx-5.3.0-amd64_linux.tar.xz
+          echo "79cea8a50b6fa102d10c7b79a419cd77dead3cc2d78661de2dc5e5815dc505c1  /tmp/upx.tar.xz" | sha256sum -c -
+          mkdir -p /tmp/upx
+          tar -xJf /tmp/upx.tar.xz -C /tmp/upx --strip-components=1
+          sudo install -m 0755 /tmp/upx/upx /usr/local/bin/upx
+          upx --version
+
+      - name: Compress with UPX and verify packed executable
+        env:
+          VERSION: ${{ inputs.version || 'v3.6.3' }}
+        run: |
+          set -euo pipefail
+          before="$(stat -c %s dist/subs-check-pro)"
+          upx --best dist/subs-check-pro
+          upx -t dist/subs-check-pro
+          packed="$(stat -c %s dist/subs-check-pro)"
+          echo "UPX size: ${before} -> ${packed} bytes"
+          test "$packed" -lt "$before"
+          file dist/subs-check-pro | tee /tmp/packed-file.txt
+          grep -E 'ELF 64-bit.*x86-64' /tmp/packed-file.txt
+          upx -d -o /tmp/subs-check-pro.unpacked dist/subs-check-pro
+          unpacked_info="$(file /tmp/subs-check-pro.unpacked)"
+          printf '%s\n' "$unpacked_info"
+          grep -Fq 'statically linked' <<<"$unpacked_info"
+          strings /tmp/subs-check-pro.unpacked | grep -F 'cheap-host1.cheapyun.com:18299' >/dev/null
+          strings /tmp/subs-check-pro.unpacked | grep -F "${VERSION#v}" >/dev/null
+          rm -f /tmp/subs-check-pro.unpacked
           sha256sum dist/subs-check-pro | tee dist/SHA256SUMS
-          printf 'Version: %s\nCommit: %s\n' "$VERSION" "${GITHUB_SHA}" > dist/BUILD-INFO.txt
+          printf 'Version: %s\nCommit: %s\nUPX: 5.3.0 (--best)\n' "$VERSION" "${GITHUB_SHA}" > dist/BUILD-INFO.txt
 
       - name: Upload build artifact for inspection
         uses: actions/upload-artifact@v4
