@@ -7,7 +7,6 @@ on:
       - fix/public-substore-endpoint
       - fix/upx-compressed-linux-release
     paths:
-      - '.github/workflows/release-linux-amd64.yml'
       - 'go.mod'
       - 'go.sum'
       - '**.go'
