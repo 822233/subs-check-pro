@@ -1,4 +1,4 @@
-name: Build and publish Linux amd64 release
+name: 构建并发布 Linux amd64 版本
 
 on:
   push:
@@ -30,7 +30,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Validate release version and ensure tag is unused
+      - name: 校验版本号并确认标签未被占用
         id: version
         env:
           VERSION: ${{ inputs.version || 'v3.6.5' }}
@@ -59,24 +59,24 @@ jobs:
           echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Checkout the exact triggering commit
+      - name: 检出本次触发构建的准确提交
         uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
 
-      - name: Set up Go
+      - name: 配置 Go 环境
         uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
 
-      - name: Set up Node.js
+      - name: 配置 Node.js 环境
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Resolve pinned WebUI and validate frontend
+      - name: 解析固定版本的 WebUI 并检查前端语法
         run: |
           set -euo pipefail
           go mod download github.com/sinspired/subs-check-pro-webui
@@ -84,14 +84,14 @@ jobs:
           test -n "$webui_dir"
           node --check "$webui_dir/static/js/admin.js"
 
-      - name: Run deterministic tests and static analysis
+      - name: 运行测试与静态代码检查
         run: |
           set -euo pipefail
           go mod download
           go test ./proxy/parse ./check
           go vet ./...
 
-      - name: Build static Linux amd64 binary with upstream cross toolchain
+      - name: 使用交叉编译工具链构建 Linux amd64 静态程序
         env:
           VERSION: ${{ steps.version.outputs.tag }}
           COMMIT: ${{ github.sha }}
@@ -113,7 +113,7 @@ jobs:
                 -o dist/subs-check-pro .
             '
 
-      - name: Verify uncompressed binary architecture, static linkage and contents
+      - name: 检查未压缩程序的架构、静态链接及内容
         env:
           VERSION: ${{ inputs.version || 'v3.6.5' }}
         run: |
@@ -133,7 +133,7 @@ jobs:
           strings dist/subs-check-pro | grep -F "${VERSION#v}" >/dev/null
           stat -c '未压缩文件大小：%s 字节' dist/subs-check-pro
 
-      - name: Install pinned UPX
+      - name: 安装固定版本的 UPX
         run: |
           set -euo pipefail
           curl -fL --retry 3 -o /tmp/upx.tar.xz https://github.com/upx/upx/releases/download/v5.3.0/upx-5.3.0-amd64_linux.tar.xz
@@ -143,7 +143,7 @@ jobs:
           sudo install -m 0755 /tmp/upx/upx /usr/local/bin/upx
           upx --version
 
-      - name: Compress with UPX and verify packed executable
+      - name: 使用 UPX 压缩并验证程序完整性
         env:
           VERSION: ${{ inputs.version || 'v3.6.5' }}
         run: |
@@ -166,7 +166,7 @@ jobs:
           (cd dist && sha256sum subs-check-pro > SHA256SUMS)
           printf '版本：%s\\n提交：%s\\nUPX：5.3.0 (--best)\\n' "$VERSION" "${GITHUB_SHA}" > dist/BUILD-INFO.txt
 
-      - name: Upload build artifact for inspection
+      - name: 上传构建产物供检查
         uses: actions/upload-artifact@v4
         with:
           name: subs-check-pro-linux-amd64-${{ steps.version.outputs.tag }}
@@ -177,7 +177,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish GitHub Release with Linux amd64 assets only
+      - name: 发布仅包含 Linux amd64 资产的 GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
