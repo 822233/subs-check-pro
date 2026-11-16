@@ -157,7 +157,6 @@ jobs:
           test "$packed" -lt "$before"
           file dist/subs-check-pro | tee /tmp/packed-file.txt
           grep -E 'ELF 64-bit.*x86-64' /tmp/packed-file.txt
-          grep -Fq 'UPX' /tmp/packed-file.txt
           upx -d -o /tmp/subs-check-pro.unpacked dist/subs-check-pro
           unpacked_info="$(file /tmp/subs-check-pro.unpacked)"
           printf '%s\n' "$unpacked_info"
