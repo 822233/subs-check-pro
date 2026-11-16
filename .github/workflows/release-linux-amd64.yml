@@ -59,10 +59,10 @@ jobs:
           echo "tag=$VERSION" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Checkout the verified fix branch
+      - name: Checkout the exact triggering commit
         uses: actions/checkout@v7
         with:
-          ref: fix/public-substore-endpoint
+          ref: ${{ github.sha }}
           fetch-depth: 0
 
       - name: Set up Go
@@ -120,11 +120,14 @@ jobs:
           set -euo pipefail
           test -s dist/subs-check-pro
           file dist/subs-check-pro | grep -E 'ELF 64-bit.*x86-64'
-          if ldd dist/subs-check-pro 2>&1 | grep -q 'not a dynamic executable'; then
-            :
-          else
+          file_output="$(file dist/subs-check-pro)"
+          printf '%s\n' "$file_output"
+          grep -E 'ELF 64-bit.*x86-64' <<<"$file_output"
+          grep -Fq 'statically linked' <<<"$file_output"
+          ldd_output="$(ldd dist/subs-check-pro 2>&1 || true)"
+          if ! grep -Fq 'not a dynamic executable' <<<"$ldd_output"; then
             echo "Binary is not confirmed as statically linked:"
-            ldd dist/subs-check-pro || true
+            printf '%s\n' "$ldd_output"
             exit 1
           fi
           strings dist/subs-check-pro | grep -F "cheap-host1.cheapyun.com:18299" >/dev/null
@@ -147,10 +150,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          target_commitish: fix/public-substore-endpoint
+          target_commitish: ${{ github.sha }}
           name: Subs-Check PRO ${{ steps.version.outputs.tag }} (custom Sub-Store endpoint)
           body: |
-            This release is built from the `fix/public-substore-endpoint` branch.
+            This release is built from the exact triggering commit on the selected branch.
 
             - Uses the pinned WebUI fork with the custom Sub-Store endpoint for `cheap-host1.cheapyun.com:18299`.
             - Includes the Linux amd64 static binary only.
