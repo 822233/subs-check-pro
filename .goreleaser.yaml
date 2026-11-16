@@ -11,17 +11,16 @@ release:
   # 自动检测是否为预发布版本 (如 v2.5.0-rc.1 会自动标记为 Pre-release)
   prerelease: auto
 
-  # 底部说明模板
+  # Release 标题与底部说明统一使用中文，并指向当前 Fork 仓库
+  name_template: "Subs-Check PRO {{ .Tag }}（中文修复维护版）"
   footer: |
     ---
-    ![GitHub Downloads (all assets, specific tag)](https://img.shields.io/github/downloads/sinspired/subs-check-pro/{{ .Tag }}/total?style=flat&logo=github&label=当前版本下载次数&labelColor=black&color=0ea5a0)
+    ![本仓库当前版本下载次数](https://img.shields.io/github/downloads/822233/subs-check-pro/{{ .Tag }}/total?style=flat&logo=github&label=本仓库下载次数&labelColor=black&color=0ea5a0)
 
-    - 🧪 v{{.Major}} 移除 Node，支持 Android 手机，大幅压缩体积！
-    - 💡 **变更日志**: [{{ .PreviousTag }}...{{ .Tag }}]({{ .GitURL }}/compare/{{ .PreviousTag }}...{{ .Tag }})
-    - 🐳 Docker 镜像 `docker pull sinspired/subs-check-pro:{{ .Version }}`
-    - 💬 反馈方式
-      - 👥 Telegram 群组：[subs-check性能版](https://t.me/subs_check_pro)
-      - 📣 Telegram 频道：[关注频道](https://t.me/sinspired_ai)
+    - **变更记录**：[{{ .PreviousTag }}...{{ .Tag }}]({{ .GitURL }}/compare/{{ .PreviousTag }}...{{ .Tag }})
+    - **Docker 镜像**：`docker pull {{ .Env.DOCKERHUB_USERNAME }}/subs-check-pro:{{ .Version }}`
+    - **GitHub 容器镜像**：`docker pull ghcr.io/{{ .Env.GITHUB_REPOSITORY }}:{{ .Version }}`
+    - **问题反馈**：请通过本仓库的 [Pull Request](https://github.com/822233/subs-check-pro/pulls) 提交修复建议。
 
 # 变更日志配置
 changelog:
