@@ -15,16 +15,16 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 发布版本号（例如 v3.6.6）
+        description: 发布版本号（例如 v3.6.7）
         required: true
-        default: v3.6.6
+        default: v3.6.7
         type: string
 
 permissions:
   contents: write
 
 concurrency:
-  group: linux-amd64-release-${{ inputs.version || 'v3.6.6' }}
+  group: linux-amd64-release-${{ inputs.version || 'v3.6.7' }}
   cancel-in-progress: true
 
 jobs:
@@ -34,7 +34,7 @@ jobs:
       - name: 校验版本号并确认标签未被占用
         id: version
         env:
-          VERSION: ${{ inputs.version || 'v3.6.6' }}
+          VERSION: ${{ inputs.version || 'v3.6.7' }}
         run: |
           set -euo pipefail
           if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -116,7 +116,7 @@ jobs:
 
       - name: 检查未压缩程序的架构、静态链接及内容
         env:
-          VERSION: ${{ inputs.version || 'v3.6.6' }}
+          VERSION: ${{ inputs.version || 'v3.6.7' }}
         run: |
           set -euo pipefail
           test -s dist/subs-check-pro
@@ -146,7 +146,7 @@ jobs:
 
       - name: 使用 UPX 压缩并验证程序完整性
         env:
-          VERSION: ${{ inputs.version || 'v3.6.6' }}
+          VERSION: ${{ inputs.version || 'v3.6.7' }}
         run: |
           set -euo pipefail
           before="$(stat -c %s dist/subs-check-pro)"
@@ -194,6 +194,8 @@ jobs:
             - **Sub-Store 公网地址支持配置**：可通过配置文件中的 `sub-store-public-url` 或环境变量 `SUB_STORE_PUBLIC_URL` 设置公网访问地址。
             - **统一入口**：首页入口与分享链接使用同一配置，避免地址不一致。
             - **兼容性处理**：未配置公网地址时支持自动探测；Wails 桌面端优先使用本地地址。
+            - **节点延迟筛选**：复用原有测活 HEAD 请求计时，默认保留响应耗时严格小于 300ms 的节点；可通过 `max-latency` 调整，设置为 `0` 可关闭限制，不增加额外测活请求。
+            - **WebUI 配置**：在“延迟参数”的“超时时间”下方新增“节点延迟上限 (ms)”输入项。
             - **程序平台**：提供 Linux amd64 静态编译版本。
 
             ### 配置与数据说明
