@@ -269,7 +269,7 @@ systemctl restart subs-check-pro.service
 - [x] ⚡ [自适应流水线高并发模式](https://github.com/sinspired/subs-check-pro/wiki/Features-Details)
 - [x] 🗺️ [增强位置标签](https://github.com/sinspired/subs-check-pro/wiki/Features-Details)
 - [x] 🎲 [智能节点乱序](https://github.com/sinspired/subs-check-pro/wiki/Features-Details)
-- [x] ⏱️ 可选的独立 HTTP 延迟筛选，支持自定义毫秒阈值与并发数
+- [x] ⏱️ 复用原有测活请求记录 HTTP 响应耗时，支持 WebUI 调整延迟阈值（默认 300ms，不增加额外请求）
 - [x] 🕒 [保存并加载历次可用节点](https://github.com/sinspired/subs-check-pro/wiki/Features-Details)
 - [x] 📊 [统计订阅链接总数、可用节点数量、成功率](https://github.com/sinspired/subs-check-pro/wiki/Features-Details)
 - [x] 🚦 [自动检测本地代理环境](https://github.com/sinspired/subs-check-pro/wiki/System-Proxy)

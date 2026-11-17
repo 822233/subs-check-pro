@@ -64,13 +64,9 @@ type Config struct {
 
 	CheckInterval        int     `yaml:"check-interval"`
 	CronExpression       string  `yaml:"cron-expression"`
-	Timeout int `yaml:"timeout"`
-	// LatencyFilter 启用独立的节点 HTTP 延迟筛选。
-	LatencyFilter       bool   `yaml:"latency-filter"`
-	MaxLatency          int    `yaml:"max-latency"`
-	LatencyTestURL      string `yaml:"latency-test-url"`
-	LatencyTestTimeout  int    `yaml:"latency-test-timeout"`
-	LatencyConcurrent   int    `yaml:"latency-concurrent"`
+	Timeout    int `yaml:"timeout"`
+	// MaxLatency 测活请求最大允许响应耗时（毫秒），0 表示不限制。
+	MaxLatency int `yaml:"max-latency"`
 	SpeedTestURL        string `yaml:"speed-test-url"`
 	DownloadTimeout      int     `yaml:"download-timeout"`
 	DownloadMB           int     `yaml:"download-mb"`
@@ -221,11 +217,7 @@ var OriginDefaultConfig = &Config{
 		"youtube",
 	},
 	DownloadMB:          20,
-	LatencyFilter:        false,
-	MaxLatency:           300,
-	LatencyTestURL:       "https://www.gstatic.com/generate_204",
-	LatencyTestTimeout:   5000,
-	LatencyConcurrent:    20,
+	MaxLatency: 300,
 	EnableSelfUpdate:     true,
 	CronCheckUpdate:      "0 0,9,21 * * *",
 
