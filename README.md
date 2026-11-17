@@ -16,6 +16,36 @@
 
 ## 🔧 本仓库解决了什么问题？
 
+## ⚡ v3.6.7 新增：节点延迟上限筛选
+
+v3.6.7 新增 `max-latency` 参数，可按节点测活请求的 HTTP 响应耗时筛选节点，减少高延迟节点进入后续测速和媒体检测阶段。
+
+**功能特点：**
+
+- **复用现有测活请求**：直接记录原有测活请求耗时，不额外发送延迟检测请求。
+- **尽早筛选**：测活成功后立即判断延迟，超过阈值的节点不再进入后续检测阶段。
+- **不占用成功名额**：被延迟阈值筛除的节点不占用 `success-limit` 可用节点名额。
+- **可与下载测速条件并用**：`max-latency` 与 `min-speed` 相互独立，可同时启用。
+- **支持关闭**：设置为 `0` 即不限制延迟。
+
+配置示例：
+
+```yaml
+# 最大允许测活 HTTP 响应耗时（毫秒）
+# 只保留响应耗时严格小于阈值的节点；0 = 不限制
+max-latency: 300
+```
+
+| 设置值 | 筛选倾向 |
+| ---: | --- |
+| `300` | 严格筛选，优先低延迟节点 |
+| `600` | 兼顾延迟与节点数量 |
+| `1000` | 放宽筛选条件 |
+| `0` | 关闭延迟限制 |
+
+**注意：** 该指标来自原有测活 HTTP 请求的响应耗时，不是 ICMP Ping，也不是独立的网络往返时延测试。实际结果会受到目标测活地址、网络路由和服务器响应情况影响。
+
+
 ### 问题背景
 
 在部分自建部署环境中，Subs-Check Pro 主程序本身可以通过公网正常访问，但 WebUI 中集成的 Sub-Store 前端入口不一定能正确识别实际可用的 Sub-Store 服务地址。
@@ -70,18 +100,18 @@ sub-store-public-url: 'http://<你的公网主机>:<端口>'
 
 请优先从本仓库的 [Releases](https://github.com/822233/subs-check-pro/releases) 页面下载，不要误下上游仓库的 Release。
 
-### 当前发布版本：v3.6.6
+### 当前发布版本：v3.6.7
 
 | 项目 | 信息 |
 | --- | --- |
-| 版本 | `v3.6.6` |
+| 版本 | `v3.6.7` |
 | 平台 | Linux |
 | CPU 架构 | amd64 / x86_64 |
 | 文件大小 | 约 55.1 MB |
 | 校验 | 提供 `SHA256SUMS` |
 | 构建信息 | 提供 `BUILD-INFO.txt` |
 
-下载：**[进入 v3.6.6 Release](https://github.com/822233/subs-check-pro/releases/tag/v3.6.6)**
+下载：**[进入 v3.6.7 Release](https://github.com/822233/subs-check-pro/releases/tag/v3.6.7)**
 
 Linux amd64 用户请根据 Release 资产名称下载对应的二进制文件及校验文件。不要将 amd64 文件用于 ARM64、ARM 或其他架构的设备。
 
@@ -93,17 +123,15 @@ Linux amd64 用户请根据 Release 资产名称下载对应的二进制文件�
 sha256sum -c SHA256SUMS
 ```
 
-校验结果应显示对应文件为 `OK`。如果校验失败，请重新下载，不要运行文件。
-
-本次 v3.6.6 已通过 Linux amd64 构建、ELF 架构与静态链接检查、UPX 压缩测试及解压复核。Release 资产已上传，并已从构建产物复核 SHA256。SHA256：
+校验结果应显示对应文件为 `OK`。v3.6.7 Release 提供 Linux amd64 程序、`SHA256SUMS` 和 `BUILD-INFO.txt`。程序文件 SHA256：
 
 ```text
-7b470bb4d5a7270e545452492e8795eec62f53cbf1e5e1bda7062664910f4840
+3684c23520bc04bb747a92f646592bb8418285bd0b6fa2466cace9f6b3e2595e
 ```
 
-> **部署状态说明：** Release 产物构建与上传成功，不代表所有用户环境均已完成部署验证。请按下方步骤在自己的服务器上备份现有配置、替换程序并检查服务日志及 WebUI 功能。
+> **部署状态说明：** Release 资产已发布。构建与发布状态可在 [GitHub Actions](https://github.com/822233/subs-check-pro/actions) 查看；部署到自己的服务器后，仍需按下方步骤检查服务日志及 WebUI 功能。
 >
-> **版本提醒：** v3.6.5 已被 v3.6.6 取代。v3.6.4 的 `SHA256SUMS` 文件记录路径不匹配下载后的文件名；请使用 v3.6.6。
+> **版本提醒：** v3.6.7 是本仓库当前最新发布版本，请优先使用本版本，不要继续下载旧版本。
 
 ## 🚀 Linux amd64 快速部署
 
@@ -119,7 +147,7 @@ uname -m
 
 ### 2. 下载并校验
 
-从 [v3.6.6 Release](https://github.com/822233/subs-check-pro/releases/tag/v3.6.6) 下载二进制文件及 `SHA256SUMS`，放到服务器同一目录后执行：
+从 [v3.6.7 Release](https://github.com/822233/subs-check-pro/releases/tag/v3.6.7) 下载二进制文件及 `SHA256SUMS`，放到服务器同一目录后执行：
 
 ```bash
 sha256sum -c SHA256SUMS
@@ -135,7 +163,7 @@ sha256sum -c SHA256SUMS
 
 ### 5. 配置 Sub-Store 公网入口
 
-升级到 v3.6.6 后，在服务器实际使用的配置文件中设置一次：
+升级到 v3.6.7 后，在服务器实际使用的配置文件中设置一次：
 
 ```yaml
 sub-store-public-url: 'http://<你的公网主机>:<端口>'
@@ -269,7 +297,7 @@ systemctl restart subs-check-pro.service
 - [x] ⚡ [自适应流水线高并发模式](https://github.com/sinspired/subs-check-pro/wiki/Features-Details)
 - [x] 🗺️ [增强位置标签](https://github.com/sinspired/subs-check-pro/wiki/Features-Details)
 - [x] 🎲 [智能节点乱序](https://github.com/sinspired/subs-check-pro/wiki/Features-Details)
-- [x] ⏱️ 复用原有测活请求记录 HTTP 响应耗时，支持 WebUI 调整延迟阈值（默认 300ms，不增加额外请求）
+- [x] ⏱️ 节点延迟上限筛选：复用原有测活请求耗时，支持配置 `max-latency`（默认 300ms，设为 0 可关闭，不增加额外请求）
 - [x] 🕒 [保存并加载历次可用节点](https://github.com/sinspired/subs-check-pro/wiki/Features-Details)
 - [x] 📊 [统计订阅链接总数、可用节点数量、成功率](https://github.com/sinspired/subs-check-pro/wiki/Features-Details)
 - [x] 🚦 [自动检测本地代理环境](https://github.com/sinspired/subs-check-pro/wiki/System-Proxy)
