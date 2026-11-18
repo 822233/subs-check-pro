@@ -84,8 +84,8 @@ jobs:
           ldd_output="$(ldd dist/subs-check-pro 2>&1 || true)"
           grep -Fq 'not a dynamic executable' <<<"$ldd_output"
           strings dist/subs-check-pro | grep -Fq '3.6.8'
-          strings dist/subs-check-pro | grep -Fq '清理内存'
-          strings dist/subs-check-pro | grep -Fq '检测完成'
+          grep -aFq '清理内存' dist/subs-check-pro
+          grep -aFq '检测完成' dist/subs-check-pro
           (cd dist && sha256sum subs-check-pro > SHA256SUMS)
           printf '版本：v%s\n提交：%s\n构建类型：静态测试构建，尚未正式发布\n' "$VERSION" "$COMMIT" > dist/BUILD-INFO.txt
 
