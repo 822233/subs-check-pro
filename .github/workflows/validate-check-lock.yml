@@ -21,7 +21,18 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    # 在 Ubuntu 20.04 容器中构建，确保 glibc 与浙江服务器兼容
+    container:
+      image: ubuntu:20.04
     steps:
+      - name: 安装构建基础工具
+        run: |
+          set -euo pipefail
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates curl git build-essential file
+          rm -rf /var/lib/apt/lists/*
+
       - name: 检出代码
         uses: actions/checkout@v7
 
