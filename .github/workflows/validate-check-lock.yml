@@ -1,0 +1,69 @@
+name: 检测锁修复构建验证
+
+on:
+  push:
+    branches:
+      - build/v3.6.8-check-lock
+    paths:
+      - 'app/**'
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/validate-check-lock.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: check-lock-validation
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v7
+
+      - name: 配置 Go 环境
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: 下载依赖
+        run: go mod download
+
+      - name: 运行核心测试
+        run: go test ./proxy/parse ./check
+
+      - name: 全项目静态检查
+        run: go vet ./...
+
+      - name: 构建 Linux amd64 测试程序
+        env:
+          VERSION: 3.6.8
+          COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          CGO_ENABLED=1 go build -trimpath \
+            -ldflags="-s -w -X main.Version=${VERSION} -X main.CurrentCommit=${COMMIT:0:7}" \
+            -o dist/subs-check-pro .
+          file_output="$(file dist/subs-check-pro)"
+          printf '%s\\n' "$file_output"
+          grep -E 'ELF 64-bit.*x86-64' <<<"$file_output"
+          test -s dist/subs-check-pro
+          (cd dist && sha256sum subs-check-pro > SHA256SUMS)
+          printf '版本：v%s\\n提交：%s\\n构建类型：CI 测试构建，尚未发布\\n' "$VERSION" "$COMMIT" > dist/BUILD-INFO.txt
+
+      - name: 上传测试构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: subs-check-pro-v3.6.8-linux-amd64-test
+          path: |
+            dist/subs-check-pro
+            dist/SHA256SUMS
+            dist/BUILD-INFO.txt
+          if-no-files-found: error
+          retention-days: 14
