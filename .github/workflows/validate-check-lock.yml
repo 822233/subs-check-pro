@@ -53,8 +53,6 @@ jobs:
           go mod download github.com/sinspired/subs-check-pro-webui@v1.8.4
           echo "===== WebUI 模块校验记录 ====="
           grep 'subs-check-pro-webui' go.sum || true
-          echo "===== go.sum 变更 ====="
-          git diff -- go.sum
 
       - name: 运行核心测试
         run: go test ./proxy/parse ./check
