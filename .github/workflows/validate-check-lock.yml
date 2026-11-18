@@ -78,7 +78,7 @@ jobs:
           set -euo pipefail
           test -s dist/subs-check-pro
           file_output="$(file dist/subs-check-pro)"
-          printf '%s\\n' "$file_output"
+          printf '%s\n' "$file_output"
           grep -E 'ELF 64-bit.*x86-64' <<<"$file_output"
           grep -Fq 'statically linked' <<<"$file_output"
           ldd_output="$(ldd dist/subs-check-pro 2>&1 || true)"
@@ -87,7 +87,7 @@ jobs:
           strings dist/subs-check-pro | grep -Fq '清理内存'
           strings dist/subs-check-pro | grep -Fq '检测完成'
           (cd dist && sha256sum subs-check-pro > SHA256SUMS)
-          printf '版本：v%s\\n提交：%s\\n构建类型：静态测试构建，尚未正式发布\\n' "$VERSION" "$COMMIT" > dist/BUILD-INFO.txt
+          printf '版本：v%s\n提交：%s\n构建类型：静态测试构建，尚未正式发布\n' "$VERSION" "$COMMIT" > dist/BUILD-INFO.txt
 
       - name: 在 Ubuntu 20.04 环境验证启动
         run: |
