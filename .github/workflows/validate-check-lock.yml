@@ -10,13 +10,10 @@ on:
       - 'go.mod'
       - 'go.sum'
       - '.github/workflows/validate-check-lock.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
-
-defaults:
-  run:
-    shell: bash
 
 concurrency:
   group: check-lock-validation
@@ -25,20 +22,11 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    # 在 Ubuntu 20.04 容器中构建，确保 glibc 与浙江服务器兼容
-    container:
-      image: ubuntu:20.04
     steps:
-      - name: 安装构建基础工具
-        run: |
-          set -euo pipefail
-          export DEBIAN_FRONTEND=noninteractive
-          apt-get update
-          apt-get install -y --no-install-recommends ca-certificates curl git build-essential file
-          rm -rf /var/lib/apt/lists/*
-
       - name: 检出代码
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: 配置 Go 环境
         uses: actions/setup-go@v6
@@ -46,13 +34,13 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: 下载完整依赖并补齐校验记录
+      - name: 校验完整依赖与校验和
         run: |
           set -euo pipefail
-          go mod download all
-          go mod download github.com/sinspired/subs-check-pro-webui@v1.8.4
-          echo "===== WebUI 模块校验记录 ====="
-          grep 'subs-check-pro-webui' go.sum || true
+          go mod download
+          go mod verify
+          grep -F 'github.com/822233/subs-check-pro-webui v0.0.0-20261117020609-66a5ac65d38c ' go.sum
+          grep -F 'github.com/822233/subs-check-pro-webui v0.0.0-20261117020609-66a5ac65d38c/go.mod ' go.sum
 
       - name: 运行核心测试
         run: go test ./proxy/parse ./check
@@ -60,27 +48,56 @@ jobs:
       - name: 全项目静态检查
         run: go vet ./...
 
-      - name: 构建 Linux amd64 测试程序
+      - name: 使用项目正式交叉工具链构建 Linux amd64 静态程序
         env:
           VERSION: 3.6.8
           COMMIT: ${{ github.sha }}
         run: |
           set -euo pipefail
           mkdir -p dist
-          CGO_ENABLED=1 go build -buildvcs=false -trimpath \
-            -ldflags="-s -w -extldflags=-ldl -X main.Version=${VERSION} -X main.CurrentCommit=${COMMIT:0:7}" \
-            -o dist/subs-check-pro .
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/work" -w /work \
+            -e VERSION="$VERSION" -e COMMIT="$COMMIT" \
+            --entrypoint bash \
+            goreleaser/goreleaser-cross@sha256:74447bcb1afe2472293568c1226ba3460f0e2db9f023d288d60cc72ffa92ee1b \
+            -lc '
+              set -euo pipefail
+              git config --global --add safe.directory /work
+              go mod download
+              CGO_ENABLED=1 CC=x86_64-linux-gnu-gcc CXX=x86_64-linux-gnu-g++ \
+                go build -trimpath -tags=netgo,osusergo \
+                -ldflags="-s -w -extldflags \"-static -Wl,-z,stack-size=8388608\" -X main.Version=${VERSION} -X main.CurrentCommit=${COMMIT:0:7}" \
+                -o dist/subs-check-pro .
+            '
+
+      - name: 检查架构、静态链接与修复代码
+        run: |
+          set -euo pipefail
+          test -s dist/subs-check-pro
           file_output="$(file dist/subs-check-pro)"
           printf '%s\\n' "$file_output"
           grep -E 'ELF 64-bit.*x86-64' <<<"$file_output"
-          test -s dist/subs-check-pro
+          grep -Fq 'statically linked' <<<"$file_output"
+          ldd_output="$(ldd dist/subs-check-pro 2>&1 || true)"
+          grep -Fq 'not a dynamic executable' <<<"$ldd_output"
+          strings dist/subs-check-pro | grep -Fq '3.6.8'
+          strings dist/subs-check-pro | grep -Fq '清理内存'
+          strings dist/subs-check-pro | grep -Fq '检测完成'
           (cd dist && sha256sum subs-check-pro > SHA256SUMS)
-          printf '版本：v%s\\n提交：%s\\n构建类型：CI 测试构建，尚未发布\\n' "$VERSION" "$COMMIT" > dist/BUILD-INFO.txt
+          printf '版本：v%s\\n提交：%s\\n构建类型：静态测试构建，尚未正式发布\\n' "$VERSION" "$COMMIT" > dist/BUILD-INFO.txt
+
+      - name: 在 Ubuntu 20.04 环境验证启动
+        run: |
+          set -euo pipefail
+          docker run --rm --network none \
+            -v "$GITHUB_WORKSPACE/dist:/dist:ro" \
+            --entrypoint /dist/subs-check-pro \
+            ubuntu:20.04 -h
 
       - name: 上传测试构建产物
         uses: actions/upload-artifact@v4
         with:
-          name: subs-check-pro-v3.6.8-linux-amd64-test
+          name: subs-check-pro-v3.6.8-linux-amd64-static-test
           path: |
             dist/subs-check-pro
             dist/SHA256SUMS
