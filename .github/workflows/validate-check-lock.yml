@@ -71,6 +71,9 @@ jobs:
             '
 
       - name: 检查架构、静态链接与修复代码
+        env:
+          VERSION: 3.6.8
+          COMMIT: ${{ github.sha }}
         run: |
           set -euo pipefail
           test -s dist/subs-check-pro
