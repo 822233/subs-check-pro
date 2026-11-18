@@ -31,8 +31,15 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: 下载依赖
-        run: go mod download
+      - name: 下载完整依赖并补齐校验记录
+        run: |
+          set -euo pipefail
+          go mod download all
+          go mod download github.com/sinspired/subs-check-pro-webui@v1.8.4
+          echo "===== WebUI 模块校验记录 ====="
+          grep 'subs-check-pro-webui' go.sum || true
+          echo "===== go.sum 变更 ====="
+          git diff -- go.sum
 
       - name: 运行核心测试
         run: go test ./proxy/parse ./check
@@ -51,11 +58,11 @@ jobs:
             -ldflags="-s -w -X main.Version=${VERSION} -X main.CurrentCommit=${COMMIT:0:7}" \
             -o dist/subs-check-pro .
           file_output="$(file dist/subs-check-pro)"
-          printf '%s\n' "$file_output"
+          printf '%s\\n' "$file_output"
           grep -E 'ELF 64-bit.*x86-64' <<<"$file_output"
           test -s dist/subs-check-pro
           (cd dist && sha256sum subs-check-pro > SHA256SUMS)
-          printf '版本：v%s\n提交：%s\n构建类型：CI 测试构建，尚未发布\n' "$VERSION" "$COMMIT" > dist/BUILD-INFO.txt
+          printf '版本：v%s\\n提交：%s\\n构建类型：CI 测试构建，尚未发布\\n' "$VERSION" "$COMMIT" > dist/BUILD-INFO.txt
 
       - name: 上传测试构建产物
         uses: actions/upload-artifact@v4
